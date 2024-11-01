@@ -1,12 +1,12 @@
 name: Terraform CI
 
-#on:
-#  push:
-#    branches:
-#      - main
-#  pull_request:
-#    branches:
-#      - main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   terraform:
@@ -69,30 +69,29 @@ jobs:
         
       - name: Key File Creation
         run: |
-            mkdir futurean
-            echo '${{ secrets.PRIVATE_KEY }}' >> futurean/private_key.pem
-            chmod 600 futurean/private_key.pem
+            echo '${{ secrets.PRIVATE_KEY }}' >> infrastructure/private_key.pem
+            chmod 600 infrastructure/private_key.pem
 
       - name: Ansible's Inventory File Creation
         run: |
-          echo "[polybot]" > futurean/inventory.ini
+          echo "[polybot]" > infrastructure/inventory.ini
           for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
-            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> futurean/inventory.ini
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> infrastructure/inventory.ini
           done
-          cat  futurean/inventory.ini
+          cat  infrastructure/inventory.ini
         shell: bash
 
       - name: Upload Inventory Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
-          path: futurean/inventory.ini
+          path: infrastructure/inventory.ini
       
       - name: Upload Private Key Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-key
-          path: futurean/private_key.pem
+          path: infrastructure/private_key.pem
 
 
       - name: Terminate AMI-Image
@@ -150,4 +149,4 @@ jobs:
             bucket_name=${{ needs.terraform.outputs.s4_bucket }} \
             alias_record=${{ needs.terraform.outputs.alias_record }} \
             aws_region=${{ vars.AWS_REGION }}"
-        shell: bash
+     
