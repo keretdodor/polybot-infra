@@ -138,9 +138,9 @@ jobs:
       - name: Run Ansible Playbook
         shell: bash
         run: |
-            ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
-            --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
-            sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
-            bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
-            alias_record=${{ needs.terraform.outputs.alias_record }} \
-            aws_region=${{ vars.AWS_REGION }}"
+          ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
+          --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
+          sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
+          bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
+          alias_record=${{ needs.terraform.outputs.alias_record }} \
+          aws_region=${{ vars.AWS_REGION }}"
