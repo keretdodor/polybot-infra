@@ -1,4 +1,4 @@
-tf/.terraform
-tf/terraform.tfstate
-tf/terraform.tfstate.backup
-tf/.terraform/terraform.tfstate
+infrastucture/tf/.terraform
+infrastucture/tf/terraform.tfstate
+infrastucture/tf/terraform.tfstate.backup
+infrastucture/tf/.terraform/terraform.tfstate
