@@ -17,7 +17,6 @@ jobs:
         working-directory: ./infrastructure/tf
 
     steps:
-
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -65,7 +64,6 @@ jobs:
           echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
           echo "sqs_queue_url=$(terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
- 
         
       - name: Key File Creation
         run: |
@@ -75,10 +73,10 @@ jobs:
       - name: Ansible's Inventory File Creation
         run: |
           echo "[polybot]" > inventory.ini
-          for ip in $( terraform output -json polybot_public_ips | jq -r '.[]'); do
-            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" > inventory.ini
+          for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> inventory.ini
           done
-          cat  inventory.ini
+          cat inventory.ini
         shell: bash
 
       - name: Upload Inventory Using Artifact
@@ -93,15 +91,14 @@ jobs:
           name: ansible-key
           path: private_key.pem
 
-
       - name: Terminate AMI-Image
-        run:  aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip ) --output json
+        run: aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip) --output json
 
     outputs:
-          dynamodb_table_name: ${{ steps.tfout.outputs.dynamodb_table_name }}
-          sqs_queue_url: ${{ steps.tfout.outputs.sqs_queue_url }}
-          s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
-          alias_record: ${{ steps.tfout.outputs.alias_record }}
+      dynamodb_table_name: ${{ steps.tfout.outputs.dynamodb_table_name }}
+      sqs_queue_url: ${{ steps.tfout.outputs.sqs_queue_url }}
+      s3_bucket: ${{ steps.tfout.outputs.bucket_name }}
+      alias_record: ${{ steps.tfout.outputs.alias_record }}
           
   ansible:
     name: Ansible Configuration
@@ -141,11 +138,9 @@ jobs:
       - name: Run Ansible Playbook
         shell: bash
         run: |
-        
-            ansible-playbook -i inventory.ini playbook.yaml \ --private-key private_key.pem \
+            ansible-playbook -i inventory.ini playbook.yaml --private-key private_key.pem \
             --extra-vars "dynamodb_table_name=${{ needs.terraform.outputs.dynamodb_table_name }} \
             sqs_queue_url=${{ needs.terraform.outputs.sqs_queue_url }} \
-            bucket_name=${{ needs.terraform.outputs.s4_bucket }} \
+            bucket_name=${{ needs.terraform.outputs.s3_bucket }} \
             alias_record=${{ needs.terraform.outputs.alias_record }} \
             aws_region=${{ vars.AWS_REGION }}"
-     
