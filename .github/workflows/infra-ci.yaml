@@ -37,14 +37,14 @@ jobs:
 
       - name: Terraform Init 
         run: |
-          cd tf && terraform init \
+           terraform init \
           -var="aws_region=${{ vars.AWS_REGION }}" \
           -var="cert_arn=${{ secrets.CERT_ARN }}" \
           -var="private_key=${{ secrets.PRIVATE_KEY }}"
 
       - name: Terraform Plan
         run: |
-          cd tf && terraform plan \
+           terraform plan \
           -var="aws_region=${{ vars.AWS_REGION }}" \
           -var="cert_arn=${{ secrets.CERT_ARN }}" \
           -var="private_key=${{ secrets.PRIVATE_KEY }}"
@@ -52,7 +52,7 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
-          cd tf && terraform apply \
+           terraform apply \
           -var="aws_region=${{ vars.AWS_REGION }}" \
           -var="cert_arn=${{ secrets.CERT_ARN }}" \
           -var="private_key=${{ secrets.PRIVATE_KEY }}" \
@@ -61,7 +61,6 @@ jobs:
       - name: Getting the outputs
         id: tfout
         run: |
-          cd tf
           echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
           echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
@@ -70,29 +69,29 @@ jobs:
         
       - name: Key File Creation
         run: |
-            echo '${{ secrets.PRIVATE_KEY }}' > infrastructure/private_key.pem
-            chmod 600 infrastructure/private_key.pem
+            echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
+            chmod 600 private_key.pem
 
       - name: Ansible's Inventory File Creation
         run: |
-          echo "[polybot]" > infrastructure/inventory.ini
-          for ip in $(cd tf && terraform output -json polybot_public_ips | jq -r '.[]'); do
-            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" > infrastructure/inventory.ini
+          echo "[polybot]" > inventory.ini
+          for ip in $( terraform output -json polybot_public_ips | jq -r '.[]'); do
+            echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" > inventory.ini
           done
-          cat  infrastructure/inventory.ini
+          cat  inventory.ini
         shell: bash
 
       - name: Upload Inventory Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
-          path: infrastructure/inventory.ini
+          path: ./
       
       - name: Upload Private Key Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-key
-          path: infrastructure/private_key.pem
+          path: ./
 
 
       - name: Terminate AMI-Image
@@ -133,7 +132,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ansible-inv
-          path: infrastructure/ansible
       
       - uses: actions/download-artifact@v4
         with:
