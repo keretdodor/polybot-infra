@@ -65,6 +65,9 @@ jobs:
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
           echo "sqs_queue_url=$(terraform output -raw sqs_queue_url)" >> "$GITHUB_OUTPUT"
         
+      - name: Terminate AMI-Image
+        run: aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip) --output json
+
       - name: Key File Creation
         run: |
             echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
@@ -83,16 +86,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ansible-inv
-          path: inventory.ini
+          path: infrastructure/tf/inventory.ini
       
       - name: Upload Private Key Using Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ansible-key
-          path: private_key.pem
-
-      - name: Terminate AMI-Image
-        run: aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip) --output json
+          path: infrastructure/tf/private_key.pem
 
     outputs:
       dynamodb_table_name: ${{ steps.tfout.outputs.dynamodb_table_name }}
@@ -133,7 +133,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: ansible-key
-          path: infrastructure/ansible
+          
     
       - name: Run Ansible Playbook
         shell: bash
