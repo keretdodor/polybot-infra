@@ -1,0 +1,36 @@
+---
+- hosts: polybot
+  become: yes
+
+  tasks:
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Pull Docker container image
+      docker_image:
+        name: "keretdodor/polybot"
+        source: pull
+
+    - name: Run Docker container with environment variables
+      docker_container:
+        name: "polybot"
+        image: "keretdodor/polybot"
+        state: started
+        restart_policy: always
+        env:
+          DYNAMODB_TABLE: "{{ dynamodb_table_name }}"
+          SQS_QUEUE_URL: "{{ sqs_queue_url }}"
+          S3_BUCKET: "{{ bucket_name }}"
+          ALIAS_RECORD: "{{ alias_record }}"
+          AWS_REGION: "{{ aws_region }}"
+
+        
