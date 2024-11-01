@@ -61,6 +61,7 @@ jobs:
       - name: Getting the outputs
         id: tfout
         run: |
+          cd tf
           echo "dynamodb_table_name=$(terraform output -raw dynamodb_table_name)" >> "$GITHUB_OUTPUT"
           echo "bucket_name=$(terraform output -raw bucket_name)" >> "$GITHUB_OUTPUT"
           echo "alias_record=$(terraform output -raw alias_record)" >> "$GITHUB_OUTPUT"
@@ -75,7 +76,7 @@ jobs:
       - name: Ansible's Inventory File Creation
         run: |
           echo "[polybot]" > infrastructure/inventory.ini
-          for ip in $(terraform output -json polybot_public_ips | jq -r '.[]'); do
+          for ip in $(cd tf && terraform output -json polybot_public_ips | jq -r '.[]'); do
             echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=private_key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'" > infrastructure/inventory.ini
           done
           cat  infrastructure/inventory.ini
