@@ -15,6 +15,10 @@ module "vpc" {
 
 resource "aws_sqs_queue" "polybot-queue" {
   name                      = var.sqs_queue_name
+  tags = {
+  Name = "polybot"
+
+     }
 }
 
 resource "aws_dynamodb_table" "polybot-table" {
@@ -27,12 +31,17 @@ resource "aws_dynamodb_table" "polybot-table" {
         name = "prediction_id"
         type = "S"
     }
+  tags = {
+  Name = "polybot"
+
+     }
 }
 
 resource "aws_s3_bucket" "telebot" {
   bucket = var.bucket_name
 
   tags = {
-    Name = "telegram-project"
+    Name = "polybot"
   }
+  
 }
