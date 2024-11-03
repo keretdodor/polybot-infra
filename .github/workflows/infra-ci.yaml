@@ -68,10 +68,7 @@ jobs:
       - name: Terminate AMI-Image
         run: aws ec2 terminate-instances --instance-ids $(terraform output -raw ami_ip) --output json
 
-      - name: Key File Creation
-        run: |
-            echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
-            chmod 600 private_key.pem
+
 
       - name: Ansible's Inventory File Creation
         run: |
@@ -87,12 +84,6 @@ jobs:
         with:
           name: ansible-inv
           path: infrastructure/tf/inventory.ini
-      
-      - name: Upload Private Key Using Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ansible-key
-          path: infrastructure/tf/private_key.pem
 
     outputs:
       dynamodb_table_name: ${{ steps.tfout.outputs.dynamodb_table_name }}
@@ -131,11 +122,10 @@ jobs:
           name: ansible-inv
           path: infrastructure/ansible
       
-      - uses: actions/download-artifact@v4
-        with:
-          name: ansible-key
-          path: infrastructure/ansible
-          
+      - name: Key File Creation
+        run: |
+            echo '${{ secrets.PRIVATE_KEY }}' > private_key.pem
+            chmod 600 private_key.pem
     
       - name: Run Ansible Playbook
         shell: bash
