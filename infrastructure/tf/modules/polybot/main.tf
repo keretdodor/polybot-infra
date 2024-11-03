@@ -1,6 +1,6 @@
 
 resource "aws_instance" "polybot" {
-  count = 2
+  count = 3
   ami = data.aws_ami.ubuntu_ami.id
   instance_type = var.instance_type
   key_name = var.key_name
