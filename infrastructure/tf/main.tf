@@ -53,7 +53,7 @@ module "yolo5" {
   s3_bucket           = module.common.bucket_name
   alias_record        = module.polybot.alias_record
   aws_region          = var.aws_region
-  private_key         = var.private_key
-
+ private_key         = var.private_key
+#
 
 }
