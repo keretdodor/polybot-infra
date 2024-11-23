@@ -44,6 +44,7 @@ I have deployed two instances of the Telegram bot on two different private subne
 
 The **Security Group** is configured to accept traffic on **port 22 from the bastion host's ip**. An **IAM Policy** with the **least privilege principle** was created to create an **IAM Role** and attach it to the Polybot's Instances
 
+When uploading an image to the Telegram bot it will look something like this:
 <p align="center">
     <img src="cars.png" alt="Cars" width="45%" style="display: inline-block;">
     <img src="cats.png" alt="Cats" width="45%" style="display: inline-block;">
@@ -58,28 +59,37 @@ he **Security Group** is configured to accept traffic **port 22 from the bastion
 
 ## Supporting AWS Services
 
-**AWS S3 Bucket**
+**AWS S3 Bucket** - 
 Serves as the primary storage for user-uploaded images and processed outputs. Its durability and scalability make it ideal for storing large datasets and integrating seamlessly with other AWS services.
 
-**AWS SQS Queue**
+**AWS SQS Queue** - 
 Facilitates communication between the Polybot and YOLOv5 instances by asynchronously transmitting image details in JSON format. This decoupling ensures fault tolerance and efficient processing.
 
-**AWS DynamoDB**
+**AWS DynamoDB** -
 Stores analyzed image metadata and output values for fast, low-latency querying. Its serverless nature ensures minimal management and high availability.
 
-**AWS Secrets Manager**
+**AWS Secrets Manager** - 
 Securely manages and rotates sensitive credentials like the Telegram bot token, eliminating the need to hardcode secrets in the application.
 
-**AWS CloudWatch**
+**AWS CloudWatch** - 
 Monitors system performance and triggers scaling actions for the YOLOv5 Auto Scaling Group based on predefined metrics. Ensures cost-efficient scaling while maintaining performance.
 
-**AWS NAT Gateway**
+**AWS NAT Gateway** - 
 Enables secure outbound internet access for instances in private subnets while keeping them inaccessible from the public internet.
 
 **AWS Route 53**
 Provides domain name management and DNS routing for the application. A CNAME record was created for the Application Load Balancer’s DNS name, enabling user-friendly access to the bot via a custom domain.
 
-# The Pipelines
+# The Pipelines, CI/CD
 
-## Creating The Infrastructure
+## Creating The Infrastructure 
 
+![alt text](terraform.png)
+
+As in every pipeline, it all starts with a commit and push. After that the pipeline on **Github Actions** starts. In the first job, the AWS credentials that were given using the **Github Secrets** are being set as well as the region with **Github Variables**. Then, the command `terraform init` initiates the Terraform file and maps and downloads the necessary modules for the main.tf file. `terraform apply` is running next, it uses all the variables we wrote in the tfvar.tf file, this command sets up the whole infrastructure.
+
+In another job, **ansible** is being installed. I first created a script that takes the IPs of the polybot's instances using Terraform outputs that creates the **inventory file** for ansible. Then, the **playbook** that will install Docker, pull and run the Polybot image is being executed, it takes 5 outputs that were taken from terraform and are necessary for running the image such as the **SQS Queue's URL, DynamoDB Table's Name, Alias Record, S3 Bucket and AWS Region**
+
+## Polybot's CI/CD
+
+![alt text](polybot.png)
