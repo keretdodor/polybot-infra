@@ -58,25 +58,25 @@ he **Security Group** is configured to accept traffic **port 22 from the bastion
 
 ## Supporting AWS Services
 
-### AWS S3 Bucket
+**AWS S3 Bucket**
 Serves as the primary storage for user-uploaded images and processed outputs. Its durability and scalability make it ideal for storing large datasets and integrating seamlessly with other AWS services.
 
-### AWS SQS Queue
+**AWS SQS Queue**
 Facilitates communication between the Polybot and YOLOv5 instances by asynchronously transmitting image details in JSON format. This decoupling ensures fault tolerance and efficient processing.
 
-### AWS DynamoDB
+**AWS DynamoDB**
 Stores analyzed image metadata and output values for fast, low-latency querying. Its serverless nature ensures minimal management and high availability.
 
-### AWS Secrets Manager
+**AWS Secrets Manager**
 Securely manages and rotates sensitive credentials like the Telegram bot token, eliminating the need to hardcode secrets in the application.
 
-### AWS CloudWatch
+**AWS CloudWatch**
 Monitors system performance and triggers scaling actions for the YOLOv5 Auto Scaling Group based on predefined metrics. Ensures cost-efficient scaling while maintaining performance.
 
-### AWS NAT Gateway
+**AWS NAT Gateway**
 Enables secure outbound internet access for instances in private subnets while keeping them inaccessible from the public internet.
 
-### AWS Route 53
+**AWS Route 53**
 Provides domain name management and DNS routing for the application. A CNAME record was created for the Application Load Balancer’s DNS name, enabling user-friendly access to the bot via a custom domain.
 
 # The Pipelines
