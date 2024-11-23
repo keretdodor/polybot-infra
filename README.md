@@ -15,7 +15,7 @@ To ensure high availability, I have created the infrastructure on two different 
 # Brief Overview
  
  **1. Telegram Bot (Polybot)**
- * Pulls Telegram token from AWS Secret Manager
+ * Pulls Telegram token from **AWS Secret Manager**
  * Users upload images through Telegram
  * The Image is being stored in an S3 bucket 
  * A SQS queue is being sent to the YOLOv5 instances with the image details in JSON format.
@@ -25,14 +25,15 @@ To ensure high availability, I have created the infrastructure on two different 
  * Pulls the image from the S3 bucket using the SQS queue details.
  * Analyzing the data with the YOLOv5 AI model, storing the analyzed image on s3 bucket and stores the output values in a **DynamoDB Table**
 
- **3. 
+**3. Conta
 
 
 
 
 
-### The Telegram Bot (Polybot) Instances
+## The Telegram Bot (Polybot) Instances
+
 I have deployed two instances of the Telegram bot on each subnet with docker. They are not using an Autoscaling Group since most of the proccesses will happen of the YOLOv5 instances. 
-The two polybot instances being grouped in the same target group that is connected to an **Application Load Balancer** , 
+The two polybot instances being grouped in the same **target group** that is connected to an **Application Load Balancer** ,  
 ![alt text](cars.png)
 ![alt text](cats.png)
