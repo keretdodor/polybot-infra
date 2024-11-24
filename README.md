@@ -147,5 +147,47 @@ First, we will need to create a secret on AWS Secret Manager, follow the next st
 
 Leave the rest by default.
 
+### Creating AWS Access Token
+
+1. In the IAM dashboard, click on Users from the sidebar.
+2. Select the user for whom you want to create an access key.
+3. Go to the Security credentials tab.
+4. Scroll down to the Access keys section and click Create access key.
+5. Choose the access key type for CLI/SDK/Automation.
+
+### Create a Key Pair for the instances
+1. go to the EC2 Dashboard.
+2. In the left-hand navigation pane, click on Key Pairs under the "Network & Security" section.
+3. Click the Create key pair button.
+4. Choose the key pair type to be RSA
+
+### Creating Github Secrets
+
+1. Click on the Settings tab in your repository.
+2. Scroll down and locate the Security section on the left sidebar, then click on Secrets and variables > Actions.
+3. Click the New repository secret button.
+
 After that, we will have to create few secrets on Github Secrets:
 
+**AWS** :
+* `AWS_SECRET_ACCESS_KEY`: AWS secret access key.
+* `AWS_ACCESS_KEY_ID`: AWS access key ID.
+* `AWS_REGION`: The AWS region where the instances are hosted.
+
+**Ansible** :
+* `PRIVATE_KEY`: Private key name to SSH into the instances.
+
+### Starting the infrastructure
+
+Now we are ready to start the infrastructure!
+
+Enter the next variables in the `tfvars` file: `key_name` , `instance_type` , `alias_record` , `sqs_queue_name`,  `dynamo_table_name` , `bucket_name`
+
+When your'e done commit and push to the main branch to start the pipeline
+
+````bash
+git add infrastructure/tf/tfvar.tf
+git commit -m "tfvar updated"
+git push origin main
+````
+And your'e set! have fun with your new Polybot!
