@@ -36,11 +36,11 @@ To streamline development and operations, I implemented three distinct CI/CD pip
 ## Application Load Balancer
 The two polybot instances being grouped in the same **Target Group** that is connected to an **Application Load Balancer** , The Load Balncer is set to lsiten to **HTTPS traffic on port 8433** it's configured that way due to Telegram's requirements, after that, inside the infrastructure the ALB forwards the request to the target group to HTTP instaed on HTTPS, this prosecure makes developers life's easier as they don't need to deal with certifications and encryptions.
 
-A Hosted Zone on **AWS Route 53** was created as well with a **CNAME RECORD** for the Load Balancer's DNS name. A certificate for the Load Balancer's new CNAME Record was created with **AWS Certificate Manager**
+A Hosted Zone on **AWS Route 53** was created as well with a **CNAME Record** for the Load Balancer's DNS name. A certificate for the Load Balancer's new CNAME Record was created with **AWS Certificate Manager**
 
 ## The Telegram Bot (Polybot) Instances
 
-I have deployed two instances of the Telegram bot on two different private subnets on two different Availability Zones for **High Availability and fault tolerant** architucture. The image was pulled from Dockerhub. They are not using an Autoscaling Group since most of the proccesses will happen of the YOLOv5 instances.
+I have deployed two instances of the Telegram bot on two different private subnets on two different Availability Zones for **High Availability and fault tolerance** architucture. The image was pulled from Dockerhub. They are not using an Autoscaling Group since most of the proccesses will happen of the YOLOv5 instances.
 
 The **Security Group** is configured to accept traffic on **port 22 from the bastion host's ip**. An **IAM Policy** with the **least privilege principle** was created to create an **IAM Role** and attach it to the Polybot's Instances
 
@@ -82,14 +82,70 @@ Provides domain name management and DNS routing for the application. A CNAME rec
 
 # The Pipelines, CI/CD
 
-## Creating The Infrastructure 
+The CI/CD pipelines for the project streamline infrastructure provisioning and application deployments, ensuring consistency and automation throughout the workflow. They are structured into three key pipelines: Infrastructure Deployment, Polybot Deployment, and YOLOv5 Deployment.
+
+##  Infrastructure Deployment
 
 ![alt text](terraform.png)
 
-As in every pipeline, it all starts with a commit and push. After that the pipeline on **Github Actions** starts. In the first job, the AWS credentials that were given using the **Github Secrets** are being set as well as the region with **Github Variables**. Then, the command `terraform init` initiates the Terraform file and maps and downloads the necessary modules for the main.tf file. `terraform apply` is running next, it uses all the variables we wrote in the tfvar.tf file, this command sets up the whole infrastructure.
 
-In another job, **ansible** is being installed. I first created a script that takes the IPs of the polybot's instances using Terraform outputs that creates the **inventory file** for ansible. Then, the **playbook** that will install Docker, pull and run the Polybot image is being executed, it takes 5 outputs that were taken from terraform and are necessary for running the image such as the **SQS Queue's URL, DynamoDB Table's Name, Alias Record, S3 Bucket and AWS Region**
+This pipeline provisions and configures the required AWS infrastructure using Terraform and Ansible for automated setup:
 
-## Polybot's CI/CD
+**First Job: Infrastructure Setup**
+
+* Loads AWS credentials and region details securely from **GitHub Secrets**.
+* Runs `terraform init` to initialize required modules and providers.
+* Executes `terraform apply` to provision resources, using variables from `tfvars` files to adapt to different environments based on user preferences.
+
+**Second Job: Configuration with Ansible**
+
+* Extracts instance IPs and resource outputs (**SQS Queue's URL, DynamoDB Table's Name, Alias Record, S3 Bucket and AWS Region**) using Terraform outputs.
+* Creates an Ansible `inventory.ini` file using a script that takes the Polybot instances IPs from Terraform. 
+
+ Uses Ansible to:
+* Install Docker on provisioned EC2 instances.
+* Pull and run the Polybot Docker container image.
+* Configure instances for their roles in the application, integrating with AWS services like SQS and DynamoDB.
+
+## Polybot Deployment
 
 ![alt text](polybot.png)
+
+This pipeline handles building and deploying the Polybot application, emphasizing consistent container management:
+
+**Build Job:**
+
+* Authenticates to Docker Hub using credentials stored in **GitHub Secrets**.
+* **Builds, tags, and pushes** the Polybot container image to Docker Hub, ensuring version control for easier tracking and rollbacks.
+
+**Deploy Job:**
+
+* Identifies the Polybot instance IPs using AWS CLI filtered by tag and generates an Ansible inventory file.
+* Deploys the updated Polybot container on the instances using ansible , ensuring it operates with the correct configurations and dependencies that were extracted using AWS CLI.
+
+## YOLOv5 Deployment
+
+![alt text](yolov5.png)
+
+The build part is almost identical to the polybot's, however the deploy is a little different. Here, in order to deploy the new changes made to the YOLOv5 image, we will need to create a new **Launch Template** for the Auto Scaling Group and it will happen it few steps using the user's credentials and AWS CLI:
+1. Creating a new instance with a user-data script that runs the `docker run --restart always` command to ensure the image is running immediately when starting the instance.
+2. From that instance I created a new **AMI** that will be used later as the base of my new Launch Template.
+3. Terminating the instance as it is no longer needed.
+4. creating a new Launch Template with the AWS CLI.
+5. Attaching the new AMI to the existing Auto Scaling Group, the ASG was filtered by tag.
+
+# Getting Started
+
+### Secret Creation
+
+First, we will need to create a secret on AWS Secret Manager, follow the next steps:
+
+1. Log in to the AWS Management Console and navigate to Secrets Manager.
+2. Click Store a new secret and select Other type of secret. 
+3. Under Key/value pairs, enter: **Key: token , Value: < your-token-value >** 
+4. In the Key Secret Name, enter `telegram-token`
+
+Leave the rest by default.
+
+After that, we will have to create few secrets on Github Secrets:
+
